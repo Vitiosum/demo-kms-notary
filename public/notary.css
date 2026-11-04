@@ -30,9 +30,10 @@ button[disabled] { opacity: 0.5; pointer-events: none; }
 
 /* ---------- The KMS wire: every call of the last action ---------- */
 .wire { position: sticky; top: 80px; margin-top: clamp(28px, 5vw, 60px); max-height: calc(100vh - 100px); display: flex; flex-direction: column; border-radius: var(--cc-radius); border: 1px solid var(--cc-border); background: linear-gradient(180deg, rgba(28, 32, 69, 0.96), rgba(14, 17, 36, 0.98)); box-shadow: var(--cc-shadow); overflow: hidden; min-width: 0; }
-.wire__head { display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-bottom: 1px solid var(--cc-border); }
-.wire__head h2 { font-size: 15px; font-weight: 700; white-space: nowrap; }
-.wire__host { margin-left: auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wire__head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 14px 18px; border-bottom: 1px solid var(--cc-border); }
+.wire__head h2 { flex: 1; font-size: 15px; font-weight: 700; white-space: nowrap; }
+/* The full KMS endpoint: it drops under the title rather than being cut. */
+.wire__host { max-width: 100%; overflow-wrap: anywhere; white-space: normal; }
 .wire__lamp { width: 12px; height: 12px; border-radius: 50%; flex: none; background: #3a2030; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12); transition: background 0.25s, box-shadow 0.25s; }
 .wire__lamp.is-on { background: var(--cc-orange); box-shadow: 0 0 14px 4px rgba(245, 116, 97, 0.6); }
 .wire__lamp.is-refused { background: var(--cc-red); box-shadow: 0 0 14px 4px rgba(203, 28, 66, 0.7); }

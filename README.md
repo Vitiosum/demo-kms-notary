@@ -4,13 +4,13 @@
 
 ![The archive: a deed as PostgreSQL stores it, opened by the notary, and the decrypt call on the KMS wire](docs/archive.png)
 
-![The master key: three versions, the oldest locked, and the KMS refusing a deed sealed by it](docs/master-key.png)
+![The master key: four versions, the three older ones locked, and Clever KMS refusing a deed sealed by v2](docs/master-key.png)
 
 | Phone, the archive | Phone, the master key |
 |---|---|
 | <img src="docs/phone-archive.png" width="300" alt="The archive on a phone"> | <img src="docs/phone-key.png" width="300" alt="The master key on a phone"> |
 
-**Run it yourself.** Clever KMS is in **private access** (November 2026): ask your Clever Cloud contact or the support to enable it on your organisation first. The hosted demo was taken down after the presales review. The steps in [Deploy on Clever Cloud](#deploy-on-clever-cloud) recreate it in about 10 minutes.
+**Run it yourself.** Clever KMS is in **private beta** (November 2026): ask your Clever Cloud contact or the support to open it for your user first. The hosted demo was taken down after the presales review. The steps in [Deploy on Clever Cloud](#deploy-on-clever-cloud) recreate it in about 10 minutes.
 
 ## What Clever KMS does in the demo
 
@@ -24,7 +24,7 @@ Clever KMS speaks the HashiCorp Vault / OpenBao HTTP API. The demo only uses its
 | **Try it as a thief** | the same call, without `X-Vault-Token` | `403 permission denied`: a database dump without the token is noise |
 | **Rotate** | `POST /v1/transit/keys/notary-master/rotate` | A new version. New deeds use it, old deeds still open with theirs, and nothing in PostgreSQL is re-encrypted |
 | **Re-seal** | `POST /v1/transit/rewrap/notary-master` | Each older sealed key comes back sealed by the latest version. Only the `wrapped_key` column changes: the body fingerprint stays the same |
-| **Lock / Unlock** | `POST /v1/transit/keys/notary-master/config` with `min_decryption_version` | Older versions are refused (`400 … disallowed by policy (too old)`), even for the app, until you unlock. Re-sealed deeds still open |
+| **Lock / Unlock** | `POST /v1/transit/keys/notary-master/config` with `min_decryption_version` | Older versions are refused (`400 ciphertext version 2 is below minimum decryption version 4`), even for the app, until you unlock. Re-sealed deeds still open |
 | The master key panel | `GET /v1/transit/keys/notary-master` | Versions, latest, lock state, read back from the KMS on every load |
 
 **Two layers, two key holders.** The PostgreSQL add-on is created with [encryption at rest](https://www.clever.cloud/developers/doc/security/encryption-at-rest/) (LUKS, one key per add-on, held by Clever Cloud): a stolen disk is unreadable. Envelope encryption adds the application layer: a database user, a backup or a dump only sees `body` as AES-256-GCM ciphertext, and opening it takes a call to the KMS with the app's token. Each deed's reference is bound to its ciphertext (AES-GCM additional data), so a body copied onto another row fails to open.
@@ -35,7 +35,7 @@ Clever KMS speaks the HashiCorp Vault / OpenBao HTTP API. The demo only uses its
 
 ## Deploy on Clever Cloud
 
-You need [clever-tools](https://www.clever.cloud/developers/doc/cli/) (`clever login` done), Clever KMS enabled on your organisation, and the organisation ID (`orga_…`, shown in the Console). Run the commands from the repo root: `clever create` links the folder to the new app.
+You need [clever-tools](https://www.clever.cloud/developers/doc/cli/) (`clever login` done), Clever KMS opened for your Clever Cloud user, and the organisation ID (`orga_…`, shown in the Console). Run the commands from the repo root: `clever create` links the folder to the new app.
 
 ```bash
 # 1. The app and its size (Node.js 24, from "engines" in package.json)
@@ -47,15 +47,11 @@ clever addon create postgresql-addon demo-kms-notary-pg --plan xxs_sml --region 
   --org <org_id> --option encryption=true --yes
 clever service link-addon demo-kms-notary-pg          # injects POSTGRESQL_ADDON_URI
 
-# 3. Clever KMS (private access)
-clever addon create kms demo-kms-notary-kms --org <org_id>
-#    it prints two Biscuit tokens: root (administration) and user (day-to-day). Keep them safe.
+# 3. Clever KMS (private access, plan beta), linked: injects VAULT_ADDR and VAULT_TOKEN
+clever addon create kms demo-kms-notary-kms --plan beta --region par --org <org_id>
+clever service link-addon demo-kms-notary-kms
 
-# 4. Variables
-clever env set VAULT_ADDR https://kms.eu-fr-1.services.clever-cloud.com:8200
-clever env set VAULT_TOKEN '<the user token>'
-
-# 5. Deploy and check
+# 4. Deploy and check
 clever deploy
 clever domain                                          # → app-….cleverapps.io
 node scripts/prove.mjs https://<your-app>.cleverapps.io
@@ -69,12 +65,14 @@ To remove everything: `clever delete --app <app_id>`, then `clever addon delete 
 
 | Variable | Set by | Role |
 |---|---|---|
-| `VAULT_ADDR` | you | Clever KMS address, `https://kms.eu-fr-1.services.clever-cloud.com:8200` |
-| `VAULT_TOKEN` | you, from `clever addon create kms` | The user token. Read server-side only, sent in the `X-Vault-Token` header, never logged or shown |
+| `VAULT_ADDR` | KMS add-on (linked) | Clever KMS address |
+| `VAULT_TOKEN` | KMS add-on (linked) | The user token. Read server-side only, sent in the `X-Vault-Token` header, never logged or shown |
 | `POSTGRESQL_ADDON_URI` | PostgreSQL add-on (linked) | Connection string. `POSTGRESQL_ADDON_DIRECT_URI` is preferred when present |
 | `KMS_KEY_NAME` | optional | Master key name, `notary-master` by default |
 | `TRANSIT_MOUNT` | optional | Transit mount path, `transit` by default |
 | `PG_POOL_MAX` | optional | PostgreSQL pool size per instance, `4` by default |
+
+The KMS add-on also injects `VAULT_ADMIN_TOKEN`, `VAULT_HOST` and `VAULT_PORT`; the app does not read them.
 
 The "Running on Clever Cloud" panel shows `CC_APP_NAME`, `APP_ID`, `INSTANCE_NUMBER`, `INSTANCE_TYPE`, `CC_PRETTY_INSTANCE_NAME`, `CC_COMMIT_ID` and `CC_DEPLOYMENT_ID`, and nothing else.
 

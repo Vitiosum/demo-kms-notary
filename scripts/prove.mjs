@@ -41,7 +41,7 @@ check('The notary opens NTR-0001: one decrypt call, text back', open1.json?.ok &
 const steal = await api('/api/deeds/NTR-0001/steal', 'POST');
 check('A thief without the token gets 403 from the KMS', steal.json?.refused === 403 && steal.json.calls[0].auth === false, kmsCalls(steal));
 
-const sealed = await api('/api/deeds', 'POST', { title: 'Proof: lease of a lighthouse keeper\'s cottage', body: 'Fictional deed sealed by scripts/prove.mjs. Rent: one painted pebble a month.', kind: 'Lease' });
+const sealed = await api('/api/deeds', 'POST', { title: 'Lease of a lighthouse keeper\'s cottage, Ouessant', body: 'Fictional deed sealed by scripts/prove.mjs. Rent: one painted pebble a month.', kind: 'Lease' });
 const ref = sealed.json?.ref;
 check('Sealing a deed: one datakey call, sealed by the latest version', sealed.status === 201 && sealed.json.row.version === L && !sealed.text.includes('painted pebble'), `${ref}, ${kmsCalls(sealed)}`);
 const leaked = JSON.stringify(sealed.json?.calls ?? []);
