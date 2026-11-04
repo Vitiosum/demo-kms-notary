@@ -1,0 +1,19 @@
+{
+  "name": "demo-kms-notary",
+  "version": "1.0.0",
+  "description": "The Notary: every deed is encrypted with its own data key, sealed by a master key that never leaves Clever KMS. A Clever Cloud demo.",
+  "license": "MIT",
+  "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": "24"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "prove": "node scripts/prove.mjs"
+  },
+  "dependencies": {
+    "pg": "8.23.1"
+  }
+}

@@ -1,0 +1,18 @@
+# Dependencies
+node_modules
+
+# Local environment (the example stays)
+.env*
+!.env.example
+
+# Clever Cloud link (app ids of whoever deployed it)
+.clever.json
+
+# OS and editors
+.DS_Store
+.idea
+.vscode
+*.log
+
+# Local tooling
+.claude
