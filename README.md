@@ -12,6 +12,8 @@
 
 **Run it yourself.** Clever KMS is in **private beta** (November 2026): ask your Clever Cloud contact or the support to open it for your user first. The hosted demo was taken down after the presales review. The steps in [Deploy on Clever Cloud](#deploy-on-clever-cloud) recreate it in about 10 minutes.
 
+**Get certified.** This demo runs on Clever Cloud. To deploy your own apps the same way, get certified at the [Clever Cloud Academy](https://academy.clever.cloud/).
+
 ## What Clever KMS does in the demo
 
 Clever KMS speaks the HashiCorp Vault / OpenBao HTTP API. The demo only uses its **Transit** engine (encryption as a service), with one master key, `notary-master` (`aes256-gcm96`, not exportable).
