@@ -14,7 +14,7 @@
 |---|---|
 | <img src="docs/phone-archive.png" width="300" alt="The archive on a phone"> | <img src="docs/phone-key.png" width="300" alt="The master key on a phone"> |
 
-**Run it yourself.** Clever KMS is in **private beta** (November 2026): get access for your user first (see *Before you start* above). A live copy runs at <https://app-c88fe6d0-3584-4091-984b-4c43065599e8.cleverapps.io/> (redeployed on 2026-11-10; it may be stopped between demos). The steps in [Deploy on Clever Cloud](#deploy-on-clever-cloud) recreate it in about 10 minutes.
+**Run it yourself.** Clever KMS is in **private beta** (November 2026): get access for your user first (see *Before you start* above). The hosted demo was taken down after the presales review (November 2026). The steps in [Deploy on Clever Cloud](#deploy-on-clever-cloud) recreate it in about 10 minutes.
 
 **Get certified.** This demo runs on Clever Cloud. To deploy your own apps the same way, get certified at the [Clever Cloud Academy](https://academy.clever.cloud/).
 
