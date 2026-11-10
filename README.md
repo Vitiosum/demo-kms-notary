@@ -1,6 +1,10 @@
 # The Notary — Clever KMS on Clever Cloud
 
 > A notary's archive where **every deed has its own key**. When you seal a deed, the app asks **Clever KMS** for a fresh 256-bit data key, encrypts the deed with it, stores the key *sealed by a master key that never leaves the KMS*, and wipes the clear copy. PostgreSQL only ever holds ciphertext and sealed keys. A wire beside the page shows every call to the KMS as sent and as answered: opening a deed, a thief trying without the token (403), rotating the master key without re-encrypting a single byte, re-sealing the keys, and locking old key versions so the KMS refuses them. All deeds are fictional.
+>
+> **Before you start.** Clever KMS is in **private beta**, opened **per Clever Cloud user** (not per organisation). Until your user has access, the add-on cannot be created (the API answers 403, "not this addon's provider"). Ask the Clever Cloud team (your Clever Cloud contact) or the support to open it for your user, then follow the steps below.
+
+![Live on Clever Cloud: the notary opens a deed with one decrypt call to Clever KMS (200), then a thief sends the same call without the token and gets 403](docs/tour.gif)
 
 ![The archive: a deed as PostgreSQL stores it, opened by the notary, and the decrypt call on the KMS wire](docs/archive.png)
 
@@ -10,7 +14,7 @@
 |---|---|
 | <img src="docs/phone-archive.png" width="300" alt="The archive on a phone"> | <img src="docs/phone-key.png" width="300" alt="The master key on a phone"> |
 
-**Run it yourself.** Clever KMS is in **private beta** (November 2026): ask your Clever Cloud contact or the support to open it for your user first. The hosted demo was taken down after the presales review. The steps in [Deploy on Clever Cloud](#deploy-on-clever-cloud) recreate it in about 10 minutes.
+**Run it yourself.** Clever KMS is in **private beta** (November 2026): get access for your user first (see *Before you start* above). The hosted demo was taken down after the presales review. The steps in [Deploy on Clever Cloud](#deploy-on-clever-cloud) recreate it in about 10 minutes.
 
 **Get certified.** This demo runs on Clever Cloud. To deploy your own apps the same way, get certified at the [Clever Cloud Academy](https://academy.clever.cloud/).
 
@@ -59,7 +63,7 @@ clever domain                                          # → app-….cleverapps.
 node scripts/prove.mjs https://<your-app>.cleverapps.io
 ```
 
-At start-up the app creates the table and the master key, then seals the five seed deeds; until the KMS answers it retries and shows the problem on the page (`/health/deep` answers 503). `scripts/prove.mjs` plays the whole story against the live app and runs 18 checks. It seals one fictional deed, rotates the key once and leaves it unlocked.
+At start-up the app creates the table and the master key, then seals the five seed deeds; until the KMS answers it retries and shows the problem on the page (`/health/deep` answers 503). Without the KMS add-on linked (`VAULT_ADDR` and `VAULT_TOKEN` missing), the app still starts: the page and `/health/deep` (503, fields `problem` and `nextStep`) name the missing variables and the step to do, which is to get the private beta access, create and link the add-on, then restart. `scripts/prove.mjs` plays the whole story against the live app and runs 18 checks. It seals one fictional deed, rotates the key once and leaves it unlocked.
 
 To remove everything: `clever delete --app <app_id>`, then `clever addon delete <addon_id>` for the PostgreSQL and KMS add-ons.
 
@@ -95,7 +99,7 @@ src/notary.js      what each button does: seal, open, steal, rotate, re-seal, lo
 src/store.js       the PostgreSQL table: index card, sealed key, iv, tag, ciphertext
 src/deeds.js       the five fictional seed deeds and the draft generator
 public/            index.html, notary.css, notary.js; cc-brand.css is the Clever Brand Kit
-test/              18 tests: npm test (a fake Transit engine, an in-memory archive)
+test/              19 tests: npm test (a fake Transit engine, an in-memory archive)
 scripts/prove.mjs  18 live checks against a running instance
 ```
 

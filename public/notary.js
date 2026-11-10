@@ -186,7 +186,7 @@ async function refresh() {
   $('keyPath').textContent = s.kms ? `${s.kms.mount}/keys/${s.kms.key}` : 'transit/keys/…';
   const problem = $('bootProblem');
   problem.hidden = s.ready;
-  problem.textContent = s.problem ?? '';
+  problem.textContent = [s.problem, s.nextStep].filter(Boolean).join('. ');
   $('platformVars').replaceChildren(...s.platform.map((p) => el('div', {}, el('dt', {}, p.name), el('dd', { class: p.value ? '' : 'is-empty' }, p.value ?? 'not set'))));
   current.deeds = s.deeds;
   current.key = s.key;

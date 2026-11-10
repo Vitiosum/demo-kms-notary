@@ -57,6 +57,10 @@ export function createApp({ env = process.env, kms = undefined, store = undefine
   const db = store ?? (url ? createStore(url, { max: Number(env.PG_POOL_MAX) || 4 }) : null);
   const missing = [...cfg.missing, ...(url || store ? [] : ['POSTGRESQL_ADDON_URI'])];
   const notary = kmsClient && db ? createNotary({ kms: kmsClient, store: db }) : null;
+  // What is left to do when a variable is missing: shown on the page and in /health/deep.
+  const nextStep = cfg.missing.length
+    ? 'Clever KMS is not linked to this app. It is a private beta opened per Clever Cloud user: ask the Clever Cloud team or the support for access, then create the KMS add-on, link it to the app (it injects VAULT_ADDR and VAULT_TOKEN) and restart.'
+    : (missing.length ? 'Link the PostgreSQL add-on to the app (it injects POSTGRESQL_ADDON_URI) and restart.' : null);
   const state = { ready: false, problem: missing.length ? `Missing ${missing.join(', ')}` : 'Opening the office', bootCalls: [] };
   const allow = rateLimiter();
   const platform = PLATFORM_VARS.map((name) => ({ name, value: env[name] ?? null }));
@@ -97,7 +101,7 @@ export function createApp({ env = process.env, kms = undefined, store = undefine
 
     if (method === 'GET' && pathname === '/health') return send(res, 200, { ok: true });
     if (method === 'GET' && pathname === '/health/deep') {
-      if (!state.ready) return send(res, 503, { ok: false, problem: state.problem });
+      if (!state.ready) return send(res, 503, { ok: false, problem: state.problem, ...(nextStep && { nextStep }) });
       try {
         await db.ping();
         const s = await notary.state();
@@ -115,7 +119,7 @@ export function createApp({ env = process.env, kms = undefined, store = undefine
     if (!pathname.startsWith('/api/')) return send(res, 404, { error: 'Not found' });
     if (method === 'GET' && pathname === '/api/draft') return send(res, 200, draftDeed());
     if (method === 'GET' && pathname === '/api/state') {
-      const base = { ready: state.ready, problem: state.problem, kms: kmsInfo, platform };
+      const base = { ready: state.ready, problem: state.problem, nextStep, kms: kmsInfo, platform };
       if (!state.ready) return send(res, 200, { ...base, key: null, deeds: [], calls: [] });
       return send(res, 200, { ...base, ...(await notary.state()), bootCalls: state.bootCalls });
     }

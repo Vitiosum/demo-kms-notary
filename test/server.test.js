@@ -139,3 +139,21 @@ test('rate limiter and client address', () => {
   assert.equal(allow('a', 2000), true);
   assert.equal(clientIp({ headers: { 'x-forwarded-for': '1.1.1.1, 2.2.2.2' }, socket: {} }), '2.2.2.2');
 });
+
+test('without the KMS variables, the app says what is missing and what to do', async () => {
+  const bare = createApp({ env: { POSTGRESQL_ADDON_URI: 'postgresql:///none' }, store: memoryStore(), log: quiet });
+  await new Promise((r) => bare.server.listen(0, '127.0.0.1', r));
+  const url = `http://127.0.0.1:${bare.server.address().port}`;
+  try {
+    await bare.boot();
+    assert.equal((await fetch(`${url}/health`)).status, 200);
+    const deep = await fetch(`${url}/health/deep`);
+    const body = await deep.json();
+    assert.equal(deep.status, 503);
+    assert.equal(body.problem, 'Missing VAULT_ADDR, VAULT_TOKEN');
+    assert.match(body.nextStep, /private beta.*link it/);
+    const state = await (await fetch(`${url}/api/state`)).json();
+    assert.equal(state.ready, false);
+    assert.equal(state.nextStep, body.nextStep);
+  } finally { await bare.close(); }
+});
